@@ -32,7 +32,7 @@ ingest = [
 # In-process model (Linux, Apple Silicon). Not installable on Intel Macs: use the
 # Docker `embedder` service there (PORTFOLIO_AI_EMBEDDING_BACKEND=local_http).
 embeddings-local = [
-    "sentence-transformers>=5.0,<7",
+    "sentence-transformers>=6.2.0,<7",
 ]
 # ONNX Runtime (production image). No PyTorch. Linux / Apple Silicon wheels.
 embeddings-onnx = [
