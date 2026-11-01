@@ -37,7 +37,7 @@ embeddings-local = [
 # ONNX Runtime (production image). No PyTorch. Linux / Apple Silicon wheels.
 embeddings-onnx = [
     "onnxruntime>=1.20,<2",
-    "tokenizers>=0.20,<1",
+    "tokenizers>=0.23.3,<1",
 ]
 dev = [
     "pytest>=8.3",
