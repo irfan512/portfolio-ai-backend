@@ -236,3 +236,32 @@ def test_secret_never_in_responses() -> None:
     client, _, _ = make()
     for response in (ask(client), client.get("/ready"), client.get("/health"), client.get("/nope")):
         assert SECRET not in response.text
+
+
+def test_out_of_scope_contract_and_session() -> None:
+    from portfolio_ai.rag.scope import OUT_OF_SCOPE_ANSWER
+
+    client, services, llm = make()
+    first = ask(client, "Tell me about the matchmaking app").json()
+    off = ask(client, "Who won the football World Cup?", session_id=first["session_id"])
+
+    assert off.status_code == 200
+    body = off.json()
+    assert body == {
+        "answer": OUT_OF_SCOPE_ANSWER,
+        "citations": [],
+        "session_id": first["session_id"],
+        "insufficient_evidence": True,
+        "out_of_scope": True,
+    }
+    assert len(llm.requests) == 1  # only the portfolio question reached the LLM
+    _, history = services.sessions.get(first["session_id"])
+    assert [t.question for t in history] == [
+        "Tell me about the matchmaking app"
+    ]  # off-topic not stored
+
+
+def test_out_of_scope_requests_still_count_toward_rate_limits() -> None:
+    client, _, _ = make(rate_limit_per_minute=1)
+    assert ask(client, "Tell me a joke").status_code == 200
+    assert ask(client, "Tell me a joke").status_code == 429

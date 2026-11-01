@@ -64,10 +64,12 @@ def chat(
         logger.error("chat_failed", extra={"error_type": type(exc).__name__})
         raise ApiError(503, "service_unavailable", UNAVAILABLE) from None
 
-    services.sessions.append(session_id, Turn(question=body.message, answer=result.answer))
+    if not result.out_of_scope:  # follow-ups should refer to the last portfolio question
+        services.sessions.append(session_id, Turn(question=body.message, answer=result.answer))
     return ChatResponse(
         answer=result.answer,
         citations=[CitationOut(**c.model_dump()) for c in result.citations],
         session_id=session_id,
         insufficient_evidence=result.insufficient_evidence,
+        out_of_scope=result.out_of_scope,
     )

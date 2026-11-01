@@ -36,6 +36,10 @@ Unknown fields are rejected. Maximum body size: 8 KB.
 - `answer`: plain text. Render it as text, never as HTML.
 - `citations`: sources the answer used. `url` is always a page of the approved
   portfolio (`https://irfan512.github.io/portfolio/#...`), never a URL written by the model.
+- `out_of_scope: true`: the question is not about Irfan's work at all (weather, sports,
+  jokes, maths...). `answer` is a fixed, polite scope message, `citations` is empty,
+  `insufficient_evidence` is `true`, and no language model was called. Decided
+  deterministically on the server, so it cannot be bypassed by calling the API directly.
 - `insufficient_evidence: true`: the portfolio does not contain the answer. The
   `answer` says so (it does not guess), and `citations` may be empty.
 - `session_id`: send it with the next question for follow-ups. Sessions expire

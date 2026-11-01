@@ -25,3 +25,4 @@ class ChatResponse(BaseModel):
     citations: list[CitationOut]
     session_id: SessionId
     insufficient_evidence: bool
+    out_of_scope: bool = False  # question is not about the portfolio (citations are empty)

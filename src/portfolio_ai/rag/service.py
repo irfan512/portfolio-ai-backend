@@ -24,6 +24,7 @@ from portfolio_ai.rag.generation.prompts import (
 from portfolio_ai.rag.ingestion.cleaning import EMAIL_PLACEHOLDER, PHONE_PLACEHOLDER
 from portfolio_ai.rag.retrieval.base import SearchResult
 from portfolio_ai.rag.retrieval.retriever import SemanticRetriever
+from portfolio_ai.rag.scope import OUT_OF_SCOPE_ANSWER, Scope, classify, classify_before_retrieval
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +45,7 @@ class ChatAnswer(BaseModel):
     answer: str
     citations: list[Citation]
     insufficient_evidence: bool
+    out_of_scope: bool = False  # not about the portfolio at all: fixed scope message, no LLM call
 
 
 @dataclass(frozen=True)
@@ -77,7 +79,15 @@ class AnswerService:
     def answer(self, question: str, history: Sequence[Turn] = ()) -> ChatAnswer:
         settings = self._settings
         history = list(history)[-settings.history_turns :]
+
+        # Off-topic questions get a fixed scope message and never reach the LLM.
+        # Clear cases are decided before retrieval; the rest use the evidence too.
+        if classify_before_retrieval(question) is Scope.OUT_OF_SCOPE:
+            return self._out_of_scope("general_request")
         results = self._retrieve(question, history)
+        if classify(question, has_history=bool(history), results=results) is Scope.OUT_OF_SCOPE:
+            return self._out_of_scope("no_portfolio_signal")
+
         evidence = select_evidence(results, token_budget=settings.evidence_token_budget)
 
         if not evidence:
@@ -120,6 +130,13 @@ class AnswerService:
             answer=answer_text,
             citations=_citations(cited),
             insufficient_evidence=insufficient,
+        )
+
+    @staticmethod
+    def _out_of_scope(reason: str) -> ChatAnswer:
+        logger.info("answer_out_of_scope", extra={"reason": reason})
+        return ChatAnswer(
+            answer=OUT_OF_SCOPE_ANSWER, citations=[], insufficient_evidence=True, out_of_scope=True
         )
 
     def _retrieve(self, question: str, history: Sequence[Turn]) -> list[SearchResult]:

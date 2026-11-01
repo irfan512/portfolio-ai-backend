@@ -42,7 +42,7 @@ def test_no_evidence_abstains_without_calling_the_llm(retriever: SemanticRetriev
     llm = FakeLLM()
     strict = AnswerService(retriever, llm, AnswerSettings(min_score=0.99))
 
-    result = strict.answer("What is the capital of France?")
+    result = strict.answer("Has Irfan worked with Rust?")  # relevant, but no evidence
 
     assert result.insufficient_evidence is True
     assert result.answer == INSUFFICIENT_EVIDENCE_ANSWER
@@ -108,3 +108,62 @@ def test_history_is_bounded(retriever: SemanticRetriever) -> None:
 def test_llm_errors_propagate_typed(retriever: SemanticRetriever) -> None:
     with pytest.raises(LLMTimeoutError):
         service(retriever, FakeLLM(error=LLMTimeoutError("slow"))).answer("Flutterwave payments")
+
+
+@pytest.mark.parametrize(
+    "question",
+    [
+        "Who won the football World Cup?",
+        "What is the weather today?",
+        "Tell me a joke.",
+        "What is 245 * 17?",
+        "Write an essay about climate change",
+        "What's the best pizza topping?",  # no general pattern, no portfolio signal or evidence
+    ],
+)
+def test_irrelevant_questions_get_the_scope_message_without_llm(
+    retriever: SemanticRetriever, question: str
+) -> None:
+    from portfolio_ai.rag.scope import OUT_OF_SCOPE_ANSWER
+
+    llm = FakeLLM()
+    result = service(retriever, llm).answer(question)
+
+    assert result.out_of_scope is True
+    assert result.answer == OUT_OF_SCOPE_ANSWER
+    assert result.citations == []
+    assert result.insufficient_evidence is True
+    assert llm.requests == []  # no Gemini call
+
+
+def test_relevant_question_without_evidence_keeps_insufficient_evidence(
+    retriever: SemanticRetriever,
+) -> None:
+    llm = FakeLLM()
+    result = AnswerService(retriever, llm, AnswerSettings(min_score=0.99)).answer(
+        "What is his hourly rate?"
+    )
+    assert result.out_of_scope is False
+    assert result.answer == INSUFFICIENT_EVIDENCE_ANSWER
+    assert llm.requests == []
+
+
+def test_off_topic_wording_about_irfan_is_still_answered_from_evidence(
+    retriever: SemanticRetriever,
+) -> None:
+    llm = FakeLLM()
+    result = service(retriever, llm).answer("Has Irfan built apps with Flutterwave payments?")
+    assert result.out_of_scope is False and len(llm.requests) == 1
+
+
+def test_short_follow_up_in_a_conversation_is_in_scope(retriever: SemanticRetriever) -> None:
+    llm = FakeLLM()
+    history = [
+        Turn(
+            question="Tell me about the goCare telemedicine app with Agora video calls",
+            answer="goCare is a telemedicine app.",
+        )
+    ]
+    result = service(retriever, llm).answer("Which one?", history)
+    assert result.out_of_scope is False
+    assert len(llm.requests) == 1
