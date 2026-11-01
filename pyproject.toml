@@ -40,7 +40,7 @@ embeddings-onnx = [
     "tokenizers>=0.20,<1",
 ]
 dev = [
-    "pytest>=8.3",
+    "pytest>=9.2.0",
     "httpx2>=2.0",  # HTTP client used by fastapi.testclient
     "ruff>=0.6",
     "pyyaml>=6",  # tests/unit/test_deploy_config.py
