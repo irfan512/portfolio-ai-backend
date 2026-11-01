@@ -38,7 +38,7 @@ class GeminiProvider:
         *,
         api_key: str,
         model: str,
-        timeout_s: float = 20.0,
+        timeout_s: float = 60.0,
         max_retries: int = 2,
         backoff_s: float = 0.75,
         thinking_budget: int | None = None,
@@ -57,6 +57,7 @@ class GeminiProvider:
         self._thinking_budget = thinking_budget
         self._thinking_level = thinking_level
         self._sleep = sleep
+        self.usage: list[dict[str, int]] = []  # token usage of each successful call
         if client is None:
             from google import genai
 
@@ -88,6 +89,7 @@ class GeminiProvider:
                     model=self._model, contents=contents, config=config
                 )
                 answer = self._parse(response)
+                self.usage.append(_usage(response))
                 logger.info(
                     "llm_call_succeeded",
                     extra={
@@ -121,12 +123,13 @@ class GeminiProvider:
     def _config(self, request: GenerationRequest) -> Any:
         kwargs: dict[str, Any] = {
             "system_instruction": request.system_instruction,
-            "temperature": request.temperature,
             "max_output_tokens": request.max_output_tokens,
             "response_mime_type": "application/json",
             "response_schema": GroundedAnswer,
         }
         thinking: dict[str, Any] = {}
+        if request.temperature is not None:
+            kwargs["temperature"] = request.temperature
         if self._thinking_budget is not None:
             thinking["thinking_budget"] = self._thinking_budget
         if self._thinking_level is not None:

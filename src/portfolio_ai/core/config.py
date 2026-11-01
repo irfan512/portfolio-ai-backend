@@ -51,13 +51,15 @@ class Settings(BaseSettings):
     gemini_model: str | None = Field(
         default=None, validation_alias=AliasChoices("GEMINI_MODEL", "gemini_model")
     )
-    gemini_timeout_s: float = 20.0
+    # Also sent to Google as X-Server-Timeout (server-side deadline). 20 s caused 504s on
+    # gemini-3.8-flash with structured output; 60 s leaves room for thinking.
+    gemini_timeout_s: float = 60.0
     gemini_max_retries: int = 2
     # Thinking tokens count toward max_output_tokens on thinking models. Set ONE of these
     # if answers get cut off: level (Gemini 3.x, e.g. "low") or budget (2.5, e.g. 0).
     gemini_thinking_level: str | None = None
     gemini_thinking_budget: int | None = None
-    gemini_temperature: float = 0.2
+    gemini_temperature: float | None = None  # unset = model default; Gemini 3.x deprecates it
     gemini_max_output_tokens: int = 800
 
     # Retrieval and answering (M3)

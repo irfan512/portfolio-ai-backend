@@ -59,7 +59,7 @@ class AnswerSettings:
     evidence_token_budget: int = 1_800
     history_turns: int = 3
     history_answer_chars: int = 600
-    temperature: float = 0.2
+    temperature: float | None = None
     max_output_tokens: int = 800
 
 

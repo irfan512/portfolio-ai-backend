@@ -122,6 +122,9 @@ with `python scripts/check_gemini.py`. On 2026-11-01 that check showed
 `gemini-2.5-flash` returns 404 for new users, while `gemini-3.8-flash` supports
 `generateContent`. Thinking tokens count toward the 800-token output limit; if
 answers come back cut off, set `PORTFOLIO_AI_GEMINI_THINKING_LEVEL=low`.
+Gemini 3.x deprecates `temperature`, so it is not sent unless
+`PORTFOLIO_AI_GEMINI_TEMPERATURE` is set. `PORTFOLIO_AI_GEMINI_TIMEOUT_S` (default 60)
+is also Google's server-side deadline: 20 s produced HTTP 504s on gemini-3.8-flash.
 
 Note: on Gemini's free tier, Google may use prompts and responses to improve its
 products. Prompts contain visitor questions and public portfolio text. The
@@ -154,7 +157,7 @@ Or use **New → Blueprint** with `render.yaml`, which sets the same values.
 | `PORTFOLIO_AI_CORS_ORIGINS` | `["https://irfan512.github.io"]` | no |
 | `PORTFOLIO_AI_TRUSTED_PROXY_HOPS` | `1` | no |
 | `PORTFOLIO_AI_CHAT_GLOBAL_DAILY_LIMIT` | `500` (or lower) | no |
-| `PORTFOLIO_AI_GEMINI_THINKING_LEVEL` | `low` (optional, see section 4) | no |
+| `PORTFOLIO_AI_GEMINI_THINKING_LEVEL` | `low` (set in `render.yaml`; see section 4) | no |
 
 Already set in the image: `PORTFOLIO_AI_ENVIRONMENT=production`,
 `PORTFOLIO_AI_EMBEDDING_BACKEND=onnx`, `PORTFOLIO_AI_EMBEDDING_MODEL_DIR`,

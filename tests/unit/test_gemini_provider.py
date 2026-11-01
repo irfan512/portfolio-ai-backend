@@ -69,7 +69,7 @@ def test_successful_call_sends_structured_config() -> None:
     config = models.calls[0]["config"]
     assert config.response_mime_type == "application/json"
     assert config.system_instruction == "rules"
-    assert config.temperature == 0.2
+    assert config.temperature is None  # not sent unless configured (deprecated on Gemini 3.x)
     assert models.calls[0]["model"] == "gemini-test"
     assert config.thinking_config is None  # only sent when configured
 
@@ -140,3 +140,17 @@ def test_api_key_never_appears_in_errors_or_logs(caplog: pytest.LogCaptureFixtur
 def test_missing_configuration_is_rejected(key: str, model: str) -> None:
     with pytest.raises(LLMConfigurationError):
         GeminiProvider(api_key=key, model=model, client=object())
+
+
+def test_temperature_is_sent_only_when_configured() -> None:
+    p, models, _ = provider(VALID)
+    p.generate_grounded(REQUEST.model_copy(update={"temperature": 0.3}))
+    assert models.calls[0]["config"].temperature == 0.3
+    assert p.usage == [{"prompt_tokens": 120, "output_tokens": 30, "total_tokens": 150}]
+
+
+def test_default_timeout_leaves_room_for_thinking_models() -> None:
+    """The SDK forwards this as X-Server-Timeout; 20 s produced 504s on gemini-3.8-flash."""
+    from portfolio_ai.core.config import Settings
+
+    assert Settings(_env_file=None).gemini_timeout_s >= 60

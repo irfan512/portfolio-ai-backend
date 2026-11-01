@@ -32,4 +32,6 @@ services:
       - key: GEMINI_API_KEY
         sync: false
       - key: GEMINI_MODEL
-        sync: false
+        sync: false            # e.g. gemini-3.8-flash (verify with scripts/check_gemini.py)
+      - key: PORTFOLIO_AI_GEMINI_THINKING_LEVEL
+        value: low             # thinking tokens count toward the output limit

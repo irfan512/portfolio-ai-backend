@@ -36,7 +36,7 @@ class GenerationRequest(BaseModel):
 
     system_instruction: str
     messages: Sequence[Message]
-    temperature: float = 0.2
+    temperature: float | None = None  # None: model default (Gemini 3.x deprecates sampling params)
     max_output_tokens: int = 800
 
 
