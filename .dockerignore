@@ -1,0 +1,11 @@
+# Allowlist: only what the image needs. Everything else (.env*, data/ with raw
+# snapshots and downloaded models, .git, tests, .venv, caches) never enters the build.
+*
+!pyproject.toml
+!README.md
+!LICENSE
+!src/
+!models/all-MiniLM-L6-v2.sha256
+!models/fetch_model.py
+src/**/__pycache__
+src/**/*.pyc

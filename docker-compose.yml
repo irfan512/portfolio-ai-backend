@@ -1,0 +1,49 @@
+# Local development services. Ports are bound to 127.0.0.1 only: nothing here
+# is reachable from your network or the internet.
+name: portfolio-ai
+
+services:
+  qdrant:
+    image: qdrant/qdrant:v1.20.0
+    ports:
+      - "127.0.0.1:6333:6333"  # HTTP / REST + dashboard
+      - "127.0.0.1:6334:6334"  # gRPC
+    volumes:
+      - qdrant_storage:/qdrant/storage  # survives `docker compose down`
+    environment:
+      QDRANT__TELEMETRY_DISABLED: "true"
+    restart: unless-stopped
+
+  # Embedding service for local ingestion on Intel Macs: the production image
+  # running the same ONNX provider the API uses (identical vectors).
+  embedder:
+    build: .
+    image: portfolio-ai-api:local
+    command: ["uvicorn", "portfolio_ai.embedding_service:app", "--host", "0.0.0.0", "--port", "8081", "--no-server-header"]
+    environment:
+      PORT: "8081"  # used by the image's HEALTHCHECK
+      PORTFOLIO_AI_ENVIRONMENT: development
+    ports:
+      - "127.0.0.1:8081:8081"
+    restart: unless-stopped
+
+  # Production image, for testing it locally: docker compose --profile prod up -d --build api
+  api:
+    profiles: ["prod"]
+    build: .
+    image: portfolio-ai-api:local
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      PORTFOLIO_AI_QDRANT_URL: http://qdrant:6333
+      PORTFOLIO_AI_QDRANT_API_KEY: ""
+      PORTFOLIO_AI_QDRANT_PRIVATE_HOSTS: '["qdrant"]'
+      PORTFOLIO_AI_CORS_ORIGINS: '["https://irfan512.github.io","http://localhost:3000"]'
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-}
+    depends_on:
+      - qdrant
+    mem_limit: 512m  # same ceiling as Render's free/starter instances
+
+volumes:
+  qdrant_storage:

@@ -1,0 +1,80 @@
+[build-system]
+requires = ["hatchling>=1.27"]  # PEP 639 license metadata
+build-backend = "hatchling.build"
+
+[project]
+name = "portfolio-ai"
+version = "0.1.0"
+description = "Evidence-grounded RAG assistant for Irfan Haider's developer portfolio."
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Irfan Haider" }]
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "pydantic>=2.8",
+    "pydantic-settings>=2.4",
+    "beautifulsoup4>=4.12",
+    "google-genai>=1.30,<3",
+    "numpy>=2.0",
+    "httpx>=0.27",
+    "qdrant-client>=1.12,<2",
+]
+
+[project.optional-dependencies]
+# Headless browser for rendering the React portfolio. After installing run:
+#   python -m playwright install chromium
+ingest = [
+    "playwright>=1.47",
+]
+# In-process model (Linux, Apple Silicon). Not installable on Intel Macs: use the
+# Docker `embedder` service there (PORTFOLIO_AI_EMBEDDING_BACKEND=local_http).
+embeddings-local = [
+    "sentence-transformers>=5.0,<7",
+]
+# ONNX Runtime (production image). No PyTorch. Linux / Apple Silicon wheels.
+embeddings-onnx = [
+    "onnxruntime>=1.20,<2",
+    "tokenizers>=0.20,<1",
+]
+dev = [
+    "pytest>=8.3",
+    "httpx2>=2.0",  # HTTP client used by fastapi.testclient
+    "ruff>=0.6",
+    "pyyaml>=6",  # tests/unit/test_deploy_config.py
+]
+
+[project.scripts]
+portfolio-ai-ingest = "portfolio_ai.ingest_cli:main"
+portfolio-ai-search = "portfolio_ai.search_cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/portfolio_ai"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+filterwarnings = [
+    # qdrant-client's in-memory engine ignores payload indexes; the server uses them.
+    "ignore:Payload indexes have no effect in the local Qdrant:UserWarning",
+    "ignore:Local mode performs exact:UserWarning",
+]
+markers = [
+    "live: hits the real portfolio over the network (set RUN_LIVE_TESTS=1)",
+    "qdrant: needs the local Qdrant server (docker compose up -d qdrant)",
+    "embedder: needs the local embedder service (docker compose up -d embedder)",
+    "gemini: calls the real Gemini API, costs money (set RUN_GEMINI_TESTS=1)",
+    "onnx: needs onnxruntime and the model folder (PORTFOLIO_AI_EMBEDDING_MODEL_DIR)",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+# E/F: pycodestyle + pyflakes, I: import sorting, B: bugbear, UP: modern syntax, N: naming
+select = ["E", "F", "I", "B", "UP", "N"]
+ignore = ["E501"]  # line length is enforced by `ruff format`

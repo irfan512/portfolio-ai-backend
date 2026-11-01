@@ -1,0 +1,64 @@
+<!--
+  SYNTHETIC TEST FIXTURE. All names, projects and contact details are invented.
+  It only copies the *markup patterns* of the rendered portfolio (sections with ids,
+  project articles, collapsed panels, tag lists, definition lists, a contact form).
+-->
+<!doctype html>
+<html lang="en">
+<head><title>Synthetic Portfolio</title><script>window.tracking = true;</script></head>
+<body>
+<a href="#main" class="sr-only">Skip to main content</a>
+<nav><a href="#work">Work</a><a href="#contact">Contact</a></nav>
+<main id="main">
+  <section id="top">
+    <p><span>Alex Example</span> <span>Example Developer</span></p>
+    <h1>Builds example apps.</h1>
+    <div class="mobile"><p>I build example software.</p></div>
+    <div class="desktop"><p>I build example software.</p></div>
+    <a href="#work">Explore my work</a>
+    <p>7 years <span aria-hidden="true">·</span> Example City</p>
+  </section>
+
+  <section id="work">
+    <h2>Selected work</h2>
+    <p>Things I have built.</p>
+    <article class="project">
+      <img src="alpha.png" alt="Alpha screenshot">
+      <p>Example category</p>
+      <h3>Project Alpha</h3>
+      <p>Alpha summary sentence.</p>
+      <ul><li><span aria-hidden="true"></span>Built feature one</li></ul>
+      <ul aria-label="Technologies"><li class="tag">Flutter</li><li class="tag">Firebase</li></ul>
+      <a href="https://play.example.com/store/apps/details?id=4155550123987">Google Play<span class="sr-only">(opens in a new tab)</span></a>
+      <button aria-expanded="false" aria-controls="p1">Project details</button>
+      <div id="p1" hidden><p>Hidden detail about Alpha.</p></div>
+    </article>
+    <div><h3>More projects</h3><p>Other apps.</p></div>
+    <ul>
+      <li><p>Second category</p><h4>Project Beta</h4><p>Beta summary.</p></li>
+    </ul>
+  </section>
+
+  <section id="experience">
+    <h2>Experience</h2>
+    <ol>
+      <li><p>2020 – 2022</p><h3>Example Engineer</h3><p>Example Co</p><ul><li>Shipped example things.</li></ul></li>
+    </ol>
+    <div><h3>Capabilities</h3><dl><div><dt>Mobile</dt><dd>Flutter, Dart</dd></div></dl></div>
+  </section>
+
+  <section id="contact">
+    <h2>Say hello</h2>
+    <dl>
+      <div><dt>Email</dt><dd><a href="mailto:alex@example.com">alex@example.com</a></dd></div>
+      <div><dt>Phone</dt><dd><a href="tel:+15555550100">+1 555 555 0100</a></dd></div>
+    </dl>
+    <a href="https://github.com/example">GitHub</a>
+    <form><label>Name</label><input id="name"><button>Send message</button><p>Form notice.</p></form>
+  </section>
+
+  <section id="empty"><h2>Nothing here</h2><button>Only a button</button></section>
+</main>
+<footer>Footer text that should not be indexed.</footer>
+</body>
+</html>

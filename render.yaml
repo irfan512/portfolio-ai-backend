@@ -1,0 +1,35 @@
+# Optional Render Blueprint (Dashboard -> Blueprints -> New Blueprint Instance).
+# Secrets use `sync: false`: Render asks for their values in the dashboard;
+# they are never stored in this file or in Git.
+services:
+  - type: web
+    name: portfolio-ai-backend
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    region: frankfurt          # same region as the Qdrant Cloud cluster (eu-central-1)
+    plan: starter              # 512 MB: ONNX image peaks at 249 MiB under load (docs/render-deployment.md)
+    healthCheckPath: /ready    # deploy goes live only when model + Qdrant + Gemini config are OK
+    autoDeploy: false          # deploy manually until the setup is proven
+    envVars:
+      - key: PORTFOLIO_AI_ENVIRONMENT
+        value: production
+      - key: PORTFOLIO_AI_LOG_LEVEL
+        value: INFO
+      - key: PORTFOLIO_AI_CORS_ORIGINS
+        value: '["https://irfan512.github.io"]'
+      - key: PORTFOLIO_AI_TRUSTED_PROXY_HOPS
+        value: "1"
+      - key: PORTFOLIO_AI_EMBEDDING_BACKEND
+        value: onnx              # the image has no PyTorch; must match the Dockerfile default
+      - key: PORTFOLIO_AI_QDRANT_COLLECTION_PREFIX
+        value: portfolio_chunks
+      - key: PORTFOLIO_AI_CHAT_GLOBAL_DAILY_LIMIT
+        value: "500"
+      - key: PORTFOLIO_AI_QDRANT_URL
+        sync: false
+      - key: PORTFOLIO_AI_QDRANT_API_KEY
+        sync: false            # use a READ-ONLY Qdrant key here
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        sync: false

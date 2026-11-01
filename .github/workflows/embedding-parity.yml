@@ -1,0 +1,37 @@
+name: Embedding parity (ONNX vs PyTorch)
+
+# Re-verifies that ONNX Runtime and sentence-transformers produce the same vectors
+# whenever embedding code or the pinned model changes. No secrets.
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "src/portfolio_ai/rag/embeddings/**"
+      - "models/**"
+      - "tests/integration/test_onnx_parity.py"
+
+permissions:
+  contents: read
+
+jobs:
+  parity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.12"
+      - name: Install (CPU PyTorch + ONNX Runtime)
+        run: |
+          python -m pip install --upgrade pip
+          pip install --index-url https://download.pytorch.org/whl/cpu "torch==2.15.0"
+          pip install -e ".[dev,embeddings-onnx,embeddings-local]"
+      - name: Fetch pinned model and verify checksums
+        run: python models/fetch_model.py 1110a243fdf4706b3f48f1d95db1a4f5529b4d41 models/all-MiniLM-L6-v2.sha256 /tmp/models/all-MiniLM-L6-v2
+      - name: Parity tests
+        env:
+          PORTFOLIO_AI_EMBEDDING_MODEL_DIR: /tmp/models/all-MiniLM-L6-v2
+        run: pytest -m onnx -v

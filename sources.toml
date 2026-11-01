@@ -1,0 +1,15 @@
+# Approved ingestion sources: the ONLY content PortfolioAI may fetch and index.
+# Edits here are reviewed changes. Removing a source deletes its chunks on the next run.
+
+[policy]
+allowed_hosts = ["irfan512.github.io"]
+allowed_path_prefixes = ["/portfolio/"]
+
+[[sources]]
+url = "https://irfan512.github.io/portfolio/"
+loader = "portfolio_site"
+source_type = "website"
+visibility = "public"
+
+# Public GitHub READMEs: add only after explicit approval of each repository URL.
+# Resume / curated profile: pending privacy review.
