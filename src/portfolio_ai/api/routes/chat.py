@@ -31,6 +31,15 @@ def chat(
     decision = services.rate_limiter.check(client_key(request, settings.trusted_proxy_hops))
     if not decision.allowed:
         logger.info("rate_limited", extra={"scope": decision.scope})
+        if decision.scope.startswith("global_"):
+            # The site-wide budget (kept below the Gemini free tier) is used up: same
+            # friendly "busy" answer as Gemini quota exhaustion. Never a paid fallback.
+            raise ApiError(
+                503,
+                "busy",
+                "The assistant has reached its usage limit for now. Please try again later.",
+                headers={"Retry-After": str(decision.retry_after_s)},
+            )
         raise ApiError(
             429,
             "rate_limited",

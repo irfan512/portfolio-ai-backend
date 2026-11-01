@@ -54,7 +54,7 @@ Every error has the same shape:
 | 422 | `invalid_request` | Bad input (`details`: `[{field, issue}]`). Fix the input. |
 | 413 | `payload_too_large` | Body over 8 KB. |
 | 429 | `rate_limited` | Too many requests. Honour the `Retry-After` header (seconds). |
-| 503 | `busy` | Upstream model quota reached. Retry later. |
+| 503 | `busy` | The free-tier model quota, or the site-wide daily/per-minute budget, is used up. Retry later (`Retry-After`). |
 | 503 | `service_unavailable` | A dependency is down or the service is starting. Retry later. |
 | 504 | `timeout` | The model took too long. Offer "try again". |
 | 500 | `internal_error` | Unexpected. Show a generic message. Quote `request_id` when reporting. |

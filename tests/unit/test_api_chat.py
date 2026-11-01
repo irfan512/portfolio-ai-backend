@@ -141,9 +141,20 @@ def test_rate_limit_returns_429_with_retry_after() -> None:
 
 
 def test_global_daily_cap_protects_llm_budget() -> None:
-    client, _, _ = make(chat_global_daily_limit=1)
+    client, _, llm = make(chat_global_daily_limit=1)
     assert ask(client).status_code == 200
-    assert ask(client).status_code == 429
+    response = ask(client)
+    assert response.status_code == 503  # site-wide budget used up: friendly "busy"
+    assert response.json()["error"]["code"] == "busy"
+    assert int(response.headers["retry-after"]) > 0
+    assert len(llm.requests) == 1  # no further LLM call, no fallback
+
+
+def test_global_per_minute_cap_returns_busy() -> None:
+    client, _, llm = make(chat_global_per_minute_limit=1)
+    assert ask(client).status_code == 200
+    assert ask(client).json()["error"]["code"] == "busy"
+    assert len(llm.requests) == 1
 
 
 @pytest.mark.parametrize(
