@@ -47,6 +47,7 @@ def make(
             per_minute=settings.rate_limit_per_minute,
             per_day=settings.rate_limit_per_day,
             global_per_day=settings.chat_global_daily_limit,
+            global_per_minute=settings.chat_global_per_minute_limit,
         ),
         embedder=embedder,
         store=store,

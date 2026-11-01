@@ -74,3 +74,10 @@ def test_build_services_never_raises_unexpected_errors() -> None:
     services = build_services(settings)
     assert services.answer_service is None
     assert services.readiness()["embeddings"] is False
+
+
+def test_empty_env_values_mean_unset(monkeypatch) -> None:
+    monkeypatch.setenv("PORTFOLIO_AI_GEMINI_THINKING_LEVEL", "")
+    monkeypatch.setenv("GEMINI_MODEL", "  ")
+    settings = Settings(_env_file=None)
+    assert settings.gemini_thinking_level is None and settings.gemini_model is None

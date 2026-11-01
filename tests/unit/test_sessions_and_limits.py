@@ -76,3 +76,15 @@ def test_client_key_uses_trusted_hop_not_spoofable_left_entries() -> None:
 def test_client_key_is_a_hash_not_the_ip() -> None:
     key = client_key(request("203.0.113.7"), 0)
     assert "203.0.113.7" not in key and len(key) == 32
+
+
+def test_global_per_minute_limit_protects_free_tier_quota() -> None:
+    clock = Clock()
+    limiter = RateLimiter(
+        per_minute=10, per_day=100, global_per_day=100, global_per_minute=2, clock=clock
+    )
+    assert limiter.check("a").allowed and limiter.check("b").allowed
+    blocked = limiter.check("c")
+    assert not blocked.allowed and blocked.scope == "global_minute" and blocked.retry_after_s > 0
+    clock.now += 61
+    assert limiter.check("c").allowed

@@ -29,7 +29,8 @@ from portfolio_ai.rag.generation.base import GenerationRequest, GroundedAnswer
 
 logger = logging.getLogger(__name__)
 
-RETRYABLE_STATUS = frozenset({429, 500, 502, 503, 504})
+# 429 (quota / rate limit) is NOT retried: on the free tier a retry just burns more quota.
+RETRYABLE_STATUS = frozenset({500, 502, 503, 504})
 
 
 class GeminiProvider:

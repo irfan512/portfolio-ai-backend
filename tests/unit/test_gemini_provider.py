@@ -86,7 +86,7 @@ def test_thinking_budget_is_passed_when_configured() -> None:
     assert models.calls[0]["config"].thinking_config.thinking_budget == 0
 
 
-@pytest.mark.parametrize("failure", [api_error(429), api_error(503), httpx.ReadTimeout("slow")])
+@pytest.mark.parametrize("failure", [api_error(503), httpx.ReadTimeout("slow")])
 def test_transient_failures_are_retried_with_backoff(failure: Exception) -> None:
     p, models, sleeps = provider(failure, VALID, max_retries=2)
     assert p.generate_grounded(REQUEST).answer == "Irfan built goCare."
@@ -97,7 +97,6 @@ def test_transient_failures_are_retried_with_backoff(failure: Exception) -> None
 @pytest.mark.parametrize(
     ("failure", "error"),
     [
-        (api_error(429), LLMRateLimitError),
         (api_error(500), LLMUnavailableError),
         (httpx.ReadTimeout("slow"), LLMTimeoutError),
     ],
@@ -154,3 +153,11 @@ def test_default_timeout_leaves_room_for_thinking_models() -> None:
     from portfolio_ai.core.config import Settings
 
     assert Settings(_env_file=None).gemini_timeout_s >= 60
+
+
+def test_quota_errors_are_not_retried() -> None:
+    """Free tier: a 429 means quota is exhausted; retrying would only burn more of it."""
+    p, models, sleeps = provider(api_error(429), VALID, max_retries=2)
+    with pytest.raises(LLMRateLimitError):
+        p.generate_grounded(REQUEST)
+    assert len(models.calls) == 1 and sleeps == []

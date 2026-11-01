@@ -24,7 +24,9 @@ services:
       - key: PORTFOLIO_AI_QDRANT_COLLECTION_PREFIX
         value: portfolio_chunks
       - key: PORTFOLIO_AI_CHAT_GLOBAL_DAILY_LIMIT
-        value: "500"
+        value: "200"            # keep below your free-tier RPD (aistudio.google.com/rate-limit)
+      - key: PORTFOLIO_AI_CHAT_GLOBAL_PER_MINUTE_LIMIT
+        value: "10"             # keep below your free-tier RPM
       - key: PORTFOLIO_AI_QDRANT_URL
         sync: false
       - key: PORTFOLIO_AI_QDRANT_API_KEY
@@ -32,6 +34,4 @@ services:
       - key: GEMINI_API_KEY
         sync: false
       - key: GEMINI_MODEL
-        sync: false            # e.g. gemini-3.8-flash (verify with scripts/check_gemini.py)
-      - key: PORTFOLIO_AI_GEMINI_THINKING_LEVEL
-        value: low             # thinking tokens count toward the output limit
+        sync: false            # gemini-3.5-flash-lite (free tier; verify with scripts/check_gemini.py)

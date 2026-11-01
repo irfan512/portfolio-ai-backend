@@ -30,12 +30,15 @@ class RateLimiter:
         per_minute: int,
         per_day: int,
         global_per_day: int,
+        global_per_minute: int = 1_000_000,
         max_clients: int = 10_000,
         clock: Callable[[], float] = time.time,
     ) -> None:
         self._per_minute = per_minute
         self._per_day = per_day
         self._global_per_day = global_per_day
+        self._global_per_minute = global_per_minute
+        self._global_window: deque[float] = deque()
         self._max_clients = max_clients
         self._clock = clock
         self._lock = threading.Lock()
@@ -52,6 +55,11 @@ class RateLimiter:
                 self._day, self._daily, self._global = today, {}, 0
             if self._global >= self._global_per_day:
                 return RateDecision(False, _seconds_until_midnight(now), "global_daily")
+            while self._global_window and now - self._global_window[0] >= 60:
+                self._global_window.popleft()
+            if len(self._global_window) >= self._global_per_minute:
+                retry = max(1, int(60 - (now - self._global_window[0])) + 1)
+                return RateDecision(False, retry, "global_minute")
             if self._daily.get(client_key, 0) >= self._per_day:
                 return RateDecision(False, _seconds_until_midnight(now), "client_daily")
 
@@ -65,6 +73,7 @@ class RateLimiter:
             window.append(now)
             self._daily[client_key] = self._daily.get(client_key, 0) + 1
             self._global += 1
+            self._global_window.append(now)
             while len(self._minute) > self._max_clients:
                 self._minute.popitem(last=False)
             return RateDecision(True)

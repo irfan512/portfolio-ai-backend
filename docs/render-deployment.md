@@ -117,6 +117,13 @@ Create a key in Google AI Studio. Then:
 - restrict it to the **Generative Language API**;
 - set a budget alert or quota in Google Cloud.
 
+**Free tier (recommended):** `GEMINI_MODEL=gemini-3.5-flash-lite`, listed as "Free of charge"
+on the free tier at ai.google.dev/gemini-api/docs/pricing. Leave billing disabled in AI Studio so
+requests can never be charged, and do not set `PORTFOLIO_AI_GEMINI_THINKING_LEVEL` (Flash-Lite
+defaults to `minimal`). Set `PORTFOLIO_AI_CHAT_GLOBAL_DAILY_LIMIT` / `_PER_MINUTE_LIMIT` below the
+limits shown at aistudio.google.com/rate-limit. Quota errors (429) are never retried and
+reach visitors as `busy`; there is no fallback model.
+
 Pick a currently supported model id for `GEMINI_MODEL`, then check it for free
 with `python scripts/check_gemini.py`. On 2026-11-01 that check showed
 `gemini-2.5-flash` returns 404 for new users, while `gemini-3.8-flash` supports
@@ -157,7 +164,7 @@ Or use **New → Blueprint** with `render.yaml`, which sets the same values.
 | `PORTFOLIO_AI_CORS_ORIGINS` | `["https://irfan512.github.io"]` | no |
 | `PORTFOLIO_AI_TRUSTED_PROXY_HOPS` | `1` | no |
 | `PORTFOLIO_AI_CHAT_GLOBAL_DAILY_LIMIT` | `500` (or lower) | no |
-| `PORTFOLIO_AI_GEMINI_THINKING_LEVEL` | `low` (set in `render.yaml`; see section 4) | no |
+| `PORTFOLIO_AI_CHAT_GLOBAL_PER_MINUTE_LIMIT` | `10` (below your free-tier RPM) | no |
 
 Already set in the image: `PORTFOLIO_AI_ENVIRONMENT=production`,
 `PORTFOLIO_AI_EMBEDDING_BACKEND=onnx`, `PORTFOLIO_AI_EMBEDDING_MODEL_DIR`,

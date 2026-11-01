@@ -4,7 +4,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from pydantic import AliasChoices, Field, SecretStr
+from pydantic import AliasChoices, Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -77,8 +77,22 @@ class Settings(BaseSettings):
     max_body_bytes: int = 8_192
     rate_limit_per_minute: int = 10
     rate_limit_per_day: int = 100
-    chat_global_daily_limit: int = 500  # caps Gemini spend even if per-IP limits are evaded
+    # Global caps across all visitors. Keep them BELOW the Gemini free-tier limits shown at
+    # aistudio.google.com/rate-limit, so the free quota is never exhausted by traffic.
+    chat_global_daily_limit: int = 500
+    chat_global_per_minute_limit: int = 10
     trusted_proxy_hops: int = 0  # 1 on Render: client IP = last X-Forwarded-For entry
+
+    @field_validator(
+        "gemini_model",
+        "gemini_thinking_level",
+        "gemini_thinking_budget",
+        "gemini_temperature",
+        mode="before",
+    )
+    @classmethod
+    def _empty_is_unset(cls, value: object) -> object:
+        return None if isinstance(value, str) and not value.strip() else value
 
     @property
     def is_production(self) -> bool:
