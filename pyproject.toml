@@ -27,7 +27,7 @@ dependencies = [
 # Headless browser for rendering the React portfolio. After installing run:
 #   python -m playwright install chromium
 ingest = [
-    "playwright>=1.47",
+    "playwright>=1.64.1",
 ]
 # In-process model (Linux, Apple Silicon). Not installable on Intel Macs: use the
 # Docker `embedder` service there (PORTFOLIO_AI_EMBEDDING_BACKEND=local_http).
